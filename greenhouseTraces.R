@@ -187,14 +187,13 @@ plot_pooled_var_cov <- function(
     x_limits = c(10, 300),
     x_breaks  = c(10, 50, 100, 150, 200, 250, 300),
     
-    # mask windows in T (minutes)
-    # 8, 12, 16, 24, 36, 48, 60, 72 hours
-    highlight_Ts          = c(480, 720, 960, 1440, 2160, 2880, 3600, 4320),
-    highlight_T_halfwidth = c(20,  25,  20,   95,   40,   175,  60,   60),
+    # mask windows in T (minutes) – default to shared globals
+    highlight_Ts          = mask_Ts,
+    highlight_T_halfwidth = mask_T_hw,
     
     # show selected T's as diamonds (from choose_greenhouse_Ts())
-    res_T          = NULL,          # list(var_choices, cov_choices)
-    sel_method     = "roll",        # which method's T to show
+    res_T          = NULL,
+    sel_method     = "roll",
     sel_point_col  = if (exists("gh_cols")) gh_cols("orange") else "#228B22"
 ) {
   stopifnot(all(c("T", "np", "s2p",  "variable") %in% names(var_traces)))
@@ -450,9 +449,10 @@ plot_pooled_var_cov_T_mask_tuning <- function(
     log10_x  = TRUE,
     
     # resonance T's (centers) and windows around them, in minutes
-    highlight_Ts          = c(720, 1440, 2160, 2880, 3600, 4320),
-    highlight_T_halfwidth = 100,
+    highlight_Ts          = mask_Ts,
+    highlight_T_halfwidth = mask_T_hw,
     
+    # shading params
     shade_color = "hotpink",
     shade_alpha = 0.15
 ) {
@@ -460,20 +460,20 @@ plot_pooled_var_cov_T_mask_tuning <- function(
   stopifnot(all(c("T", "np", "sXYp", "var_x", "var_y", "pair_key") %in% names(cov_traces)))
   
   vdat <- var_traces |>
-    filter(T >= T_limits[1], T <= T_limits[2])
+    dplyr::filter(T >= T_limits[1], T <= T_limits[2])
   
   cdat <- cov_traces |>
-    filter(T >= T_limits[1], T <= T_limits[2]) |>
-    mutate(pair_label = pair_label_stacked(var_x, var_y))
+    dplyr::filter(T >= T_limits[1], T <= T_limits[2]) |>
+    dplyr::mutate(pair_label = pair_label_stacked(var_x, var_y))
   
   t1_var <- var_traces |>
-    filter(T == 1) |>
-    select(variable, s2p)
+    dplyr::filter(T == 1) |>
+    dplyr::select(variable, s2p)
   
   t1_cov <- cov_traces |>
-    filter(T == 1) |>
-    mutate(pair_label = pair_label_stacked(var_x, var_y)) |>
-    select(pair_label, sXYp)
+    dplyr::filter(T == 1) |>
+    dplyr::mutate(pair_label = pair_label_stacked(var_x, var_y)) |>
+    dplyr::select(pair_label, sXYp)
   
   if (length(highlight_Ts) > 0) {
     if (length(highlight_T_halfwidth) == 1L &&
@@ -482,18 +482,18 @@ plot_pooled_var_cov_T_mask_tuning <- function(
     }
     stopifnot(length(highlight_Ts) == length(highlight_T_halfwidth))
     
-    rects <- tibble(
+    rects <- tibble::tibble(
       Tmin  = highlight_Ts - highlight_T_halfwidth,
       Tmax  = highlight_Ts + highlight_T_halfwidth,
       label = paste0("T≈", highlight_Ts)
     ) |>
-      mutate(
+      dplyr::mutate(
         Tmin = pmax(Tmin, T_limits[1]),
         Tmax = pmin(Tmax, T_limits[2])
       ) |>
-      filter(Tmin < Tmax)
+      dplyr::filter(Tmin < Tmax)
   } else {
-    rects <- tibble(Tmin = numeric(0), Tmax = numeric(0), label = character(0))
+    rects <- tibble::tibble(Tmin = numeric(0), Tmax = numeric(0), label = character(0))
   }
   
   var_labeller <- as_labeller(
@@ -592,7 +592,7 @@ plot_pooled_var_cov_T_mask_tuning <- function(
     labs(y = "", title = expression("Pooled Covariance " * s[i*j*","*"ESS"])) +
     base_theme
   
-  combo <- (p_var | p_cov) + plot_layout(widths = c(1, 1))
+  combo <- (p_var | p_cov) + patchwork::plot_layout(widths = c(1, 1))
   
   if (!is.null(filename)) {
     ggsave(filename, combo, width = width, height = height, dpi = dpi)
@@ -601,10 +601,10 @@ plot_pooled_var_cov_T_mask_tuning <- function(
   combo
 }
 
+
 ############################
 # Pooled var/cov vs n_t with T-based shaded windows
 ############################
-
 plot_pooled_var_cov_mask_tuning <- function(
     var_traces,
     cov_traces,
@@ -614,17 +614,15 @@ plot_pooled_var_cov_mask_tuning <- function(
     x_limits = c(10, 300),
     x_breaks  = c(10, 50, 100, 150, 200, 250, 300),
     
-    # T windows (minutes) that drive everything
-    # e.g. 8, 12, 16, 24, 36, 48, 60, 72 hours
-    highlight_Ts          = c(480, 720, 960, 1440, 2160, 2880, 3600, 4320),
-    highlight_T_halfwidth = c(20,  25,  20,   95,   40,   175,  60,   60),
+    # T windows (minutes) – default to shared globals
+    highlight_Ts          = mask_Ts,
+    highlight_T_halfwidth = mask_T_hw,
     
     shade_color = "hotpink",
     shade_alpha = 0.12,
-    
     dense_ticks    = FALSE,
     n_dense_breaks = 12
-) {
+){
   stopifnot(all(c("T", "np", "s2p",  "variable") %in% names(var_traces)))
   stopifnot(all(c("T", "np", "sXYp", "var_x", "var_y", "pair_key") %in% names(cov_traces)))
   
@@ -878,61 +876,413 @@ compute_pairwise_cov_skip <- function(data,
   bind_rows(out)
 }
 
+# ESS vs Skip vs Naive 
+# Needs:
+#   s2p_traces,  sxy_traces      (pooled/ESS traces)
+#   s2skip_traces, sXYskip_traces (skip-only traces)
+#   data_raw: raw data frame with the variables for naive var/cov
+#
+# Shows:
+#   - Skip:  solid light grey
+#   - ESS :  solid accent
+#   - Naive: dashed horizontal line
+#   - Optional T-based shaded boxes (visual only, no masking)
+
+plot_single_ess_skip_naive <- function(
+    select,                      # "co2_ppm"  OR  c("co2_ppm","soil_temp_F")
+    data_raw,                    # data.frame with those columns; used for naive
+    s2p_traces, sxy_traces,
+    s2skip_traces, sXYskip_traces,
+    type = c("auto","var","cov"),
+    
+    # style
+    col_ess   = if (exists("gh_cols")) gh_cols("moody")      else "#36648B",
+    col_skip  = if (exists("gh_cols")) gh_cols("grey_light") else "#C8C8C8",
+    col_naive = "#63B8FF",
+    lwd_ess   = 0.7,
+    lwd_skip  = 0.7,
+    lwd_naive = 0.5,
+    
+    # x-axis in n_t
+    x_limits = c(10, 300),
+    x_breaks = c(10, 50, 100, 150, 200, 250, 300),
+    
+    # T-based shaded regions (visual only, no masking) 
+    show_T_boxes          = FALSE,
+    highlight_Ts          = mask_Ts,   # global mask Ts
+    highlight_T_halfwidth = mask_T_hw, # global mask halfwidths
+    highlight_labels      = NULL,      # if NULL, use "8h", "12h", ...
+    shade_color           = if(exists("gh_cols")) gh_cols("orange") else "#FDAE61",
+    shade_alpha           = 0.15,
+    label_T_boxes         = TRUE,
+    label_position        = c("top","bottom"),
+    
+    # output
+    title_prefix = NULL,
+    filename = NULL,
+    width = 7,
+    height = 4,
+    dpi = 300
+) {
+  stopifnot(is.data.frame(data_raw))
+  type <- match.arg(type)
+  label_position <- match.arg(label_position)
+  if (type == "auto") type <- if (length(select) == 1) "var" else "cov"
+  
+  # small label helpers 
+  .pretty_var <- if (exists("pretty_var")) {
+    pretty_var
+  } else {
+    function(v) c(
+      co2_ppm      = "CO[2]",
+      humidity_pct = "Humidity",
+      soil_temp_F  = "Soil~Temp"
+    )[v]
+  }
+  
+  .pair_label <- if (exists("pair_label_stacked")) {
+    pair_label_stacked
+  } else {
+    function(x, y) paste0("atop(", .pretty_var(x), ", ", .pretty_var(y), ")")
+  }
+  
+  # build n_t rectangles from T windows using ESS grid
+  build_T_rects_np <- function(df,
+                               T_col = "T", np_col = "np",
+                               highlight_Ts, highlight_T_halfwidth,
+                               highlight_labels, x_limits) {
+    if (!show_T_boxes || is.null(highlight_Ts) || length(highlight_Ts) == 0) {
+      return(NULL)
+    }
+    
+    # recycle halfwidth if scalar
+    if (length(highlight_T_halfwidth) == 1L && length(highlight_Ts) > 1L) {
+      highlight_T_halfwidth <- rep(highlight_T_halfwidth, length(highlight_Ts))
+    }
+    stopifnot(length(highlight_Ts) == length(highlight_T_halfwidth))
+    
+    # default labels: convert T (minutes) to "xh"
+    if (is.null(highlight_labels)) {
+      hrs <- highlight_Ts / 60
+      hrs_round <- ifelse(
+        abs(hrs - round(hrs)) < 1e-6,
+        as.character(round(hrs)),
+        format(round(hrs, 1), trim = TRUE)
+      )
+      highlight_labels <- paste0(hrs_round, "h")
+    } else {
+      stopifnot(length(highlight_labels) == length(highlight_Ts))
+    }
+    
+    rects <- purrr::map_dfr(seq_along(highlight_Ts), function(k) {
+      T0 <- highlight_Ts[k]
+      hw <- highlight_T_halfwidth[k]
+      lo <- T0 - hw
+      hi <- T0 + hw
+      
+      sub <- df[df[[T_col]] >= lo & df[[T_col]] <= hi, , drop = FALSE]
+      if (!nrow(sub)) return(NULL)
+      
+      x_min <- max(min(sub[[np_col]], na.rm = TRUE), x_limits[1])
+      x_max <- min(max(sub[[np_col]], na.rm = TRUE), x_limits[2])
+      if (!is.finite(x_min) || !is.finite(x_max) || x_min >= x_max) return(NULL)
+      
+      tibble::tibble(
+        xmin    = x_min,
+        xmax    = x_max,
+        x_label = (x_min + x_max) / 2,
+        label   = highlight_labels[k]
+      )
+    })
+    
+    if (!nrow(rects)) return(NULL)
+    dplyr::distinct(rects)
+  }
+  
+  # where to put T-label text
+  y_pos     <- if (label_position == "top")  Inf else -Inf
+  vjust_lab <- if (label_position == "top")  1.2 else -0.2
+  
+  # VARIANCE CASE 
+  if (type == "var") {
+    stopifnot(is.character(select), length(select) == 1)
+    v <- select[1]
+    stopifnot(v %in% names(data_raw))
+    
+    stopifnot(!is.null(s2p_traces), !is.null(s2skip_traces))
+    
+    d_e <- s2p_traces    |> dplyr::filter(.data$variable == v)
+    d_s <- s2skip_traces |> dplyr::filter(.data$variable == v)
+    
+    # naive variance from raw data
+    x <- as.numeric(data_raw[[v]])
+    x <- x[is.finite(x)]
+    naive_val <- if (length(x) >= 2) stats::var(x, na.rm = TRUE) else NA_real_
+    
+    # keep only desired n_t range
+    d_e <- d_e |> dplyr::filter(np > x_limits[1], np < x_limits[2])
+    d_s <- d_s |> dplyr::filter(np > x_limits[1], np < x_limits[2])
+    
+    rects <- build_T_rects_np(
+      df = d_e,
+      T_col = "T",
+      np_col = "np",
+      highlight_Ts          = highlight_Ts,
+      highlight_T_halfwidth = highlight_T_halfwidth,
+      highlight_labels      = highlight_labels,
+      x_limits = x_limits
+    )
+    
+    label_text <- v
+    title_text <- if (is.null(title_prefix)) {
+      paste("Variance —", label_text)
+    } else {
+      paste(title_prefix, "— Variance —", label_text)
+    }
+    
+    p <- ggplot() +
+      { if (!is.null(rects))
+        geom_rect(
+          data = rects,
+          inherit.aes = FALSE,
+          aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+          fill  = shade_color,
+          alpha = shade_alpha
+        )
+      } +
+      geom_line(
+        data = d_s,
+        aes(x = np, y = s2skip, color = "Skip", linetype = "Skip"),
+        linewidth = lwd_skip, na.rm = TRUE
+      ) +
+      geom_line(
+        data = d_e,
+        aes(x = np, y = s2p, color = "ESS",  linetype = "ESS"),
+        linewidth = lwd_ess, na.rm = TRUE
+      ) +
+      { if (is.finite(naive_val))
+        geom_hline(
+          aes(yintercept = naive_val, color = "Naive", linetype = "Naive"),
+          linewidth = lwd_naive, show.legend = FALSE
+        )
+      } +
+      { if (!is.null(rects) && label_T_boxes)
+        geom_text(
+          data = rects,
+          inherit.aes = FALSE,
+          aes(x = x_label, label = label),
+          y = y_pos,
+          vjust = vjust_lab,
+          size = 2.5
+        )
+      } +
+      scale_x_sqrt(
+        limits = x_limits,
+        breaks = x_breaks,
+        labels = x_breaks,
+        name   = expression(n[t])
+      ) +
+      scale_color_manual(
+        name   = NULL,
+        breaks = c("ESS","Skip","Naive"),
+        values = c("ESS" = col_ess, "Skip" = col_skip, "Naive" = col_naive)
+      ) +
+      scale_linetype_manual(
+        name   = NULL,
+        breaks = c("ESS","Skip","Naive"),
+        values = c("ESS" = "solid", "Skip" = "solid", "Naive" = "dashed")
+      ) +
+      labs(
+        x     = expression(n[t]),
+        y     = NULL,
+        title = title_text
+      ) +
+      theme_bw() +
+      theme(
+        panel.grid.minor   = element_blank(),
+        panel.grid.major.x = element_blank(),
+        plot.title         = element_text(hjust = 0.5, face = "bold"),
+        legend.position    = "none"
+      )
+    
+  } else {
+    # COVARIANCE CASE
+    stopifnot(is.character(select), length(select) == 2)
+    a <- select[1]
+    b <- select[2]
+    stopifnot(all(c(a, b) %in% names(data_raw)))
+    stopifnot(!is.null(sxy_traces), !is.null(sXYskip_traces))
+    
+    key1 <- paste(a, b, sep = "_")
+    key2 <- paste(b, a, sep = "_")
+    
+    d_e <- sxy_traces     |> dplyr::filter(.data$pair_key %in% c(key1, key2))
+    d_s <- sXYskip_traces |> dplyr::filter(.data$pair_key %in% c(key1, key2))
+    
+    # naive covariance from raw data
+    x <- as.numeric(data_raw[[a]])
+    y <- as.numeric(data_raw[[b]])
+    ok <- is.finite(x) & is.finite(y)
+    x <- x[ok]; y <- y[ok]
+    naive_val <- if (length(x) >= 2) stats::cov(x, y) else NA_real_
+    
+    # keep only desired n_t range
+    d_e <- d_e |> dplyr::filter(np > x_limits[1], np < x_limits[2])
+    d_s <- d_s |> dplyr::filter(np > x_limits[1], np < x_limits[2])
+    
+    rects <- build_T_rects_np(
+      df = d_e,
+      T_col = "T",
+      np_col = "np",
+      highlight_Ts          = highlight_Ts,
+      highlight_T_halfwidth = highlight_T_halfwidth,
+      highlight_labels      = highlight_labels,
+      x_limits = x_limits
+    )
+    
+    label_text <- paste(a, "×", b)
+    
+    p <- ggplot() +
+      { if (!is.null(rects))
+        geom_rect(
+          data = rects,
+          inherit.aes = FALSE,
+          aes(xmin = xmin, xmax = xmax, ymin = -Inf, ymax = Inf),
+          fill  = shade_color,
+          alpha = shade_alpha
+        )
+      } +
+      geom_line(
+        data = d_s,
+        aes(x = np, y = sXYskip, color = "Skip", linetype = "Skip"),
+        linewidth = lwd_skip, na.rm = TRUE
+      ) +
+      geom_line(
+        data = d_e,
+        aes(x = np, y = sXYp, color = "ESS",  linetype = "ESS"),
+        linewidth = lwd_ess, na.rm = TRUE
+      ) +
+      { if (is.finite(naive_val))
+        geom_hline(
+          aes(yintercept = naive_val, color = "Naive", linetype = "Naive"),
+          linewidth = lwd_naive, show.legend = FALSE
+        )
+      } +
+      { if (!is.null(rects) && label_T_boxes)
+        geom_text(
+          data = rects,
+          inherit.aes = FALSE,
+          aes(x = x_label, label = label),
+          y = y_pos,
+          vjust = vjust_lab,
+          size = 2.5
+        )
+      } +
+      scale_x_sqrt(
+        limits = x_limits,
+        breaks = x_breaks,
+        labels = x_breaks,
+        name   = expression(n[t])
+      ) +
+      scale_color_manual(
+        name   = NULL,
+        breaks = c("ESS","Skip","Naive"),
+        values = c("ESS" = col_ess, "Skip" = col_skip, "Naive" = col_naive)
+      ) +
+      scale_linetype_manual(
+        name   = NULL,
+        breaks = c("ESS","Skip","Naive"),
+        values = c("ESS" = "solid", "Skip" = "solid", "Naive" = "dashed")
+      ) +
+      labs(
+        x     = expression(n[t]),
+        y     = NULL
+      ) +
+      theme_bw() +
+      theme(
+        panel.grid.minor   = element_blank(),
+        panel.grid.major.x = element_blank(),
+        plot.title         = element_text(hjust = 0.5, face = "bold"),
+        legend.position    = "none"
+      )
+  }
+  if (!is.null(filename)) {
+    ggsave(filename, p, width = width, height = height, dpi = dpi)
+  }
+  
+  p
+}
+
+
 ############################
 # Compute traces & make plots
 ############################
 
-#Compute traces
 vars        <- c("co2_ppm","humidity_pct","soil_temp_F")
+
 s2p_traces  <- compute_s2p_traces(phase1, vars)
-#save(s2p_traces, file = "s2p_traces.RData")
-#load("s2p_traces.RData")
-
 sxy_traces  <- compute_pairwise_cov(phase1, vars)
-#save(sxy_traces, file = "sxy_traces.RData")
-#load("sxy_traces.RData")
+s2skip_traces     <- compute_s2skip_traces(phase1, vars)
+sXYskip_traces    <- compute_pairwise_cov_skip(phase1, vars)
 
-s2skip      <- compute_s2skip_traces(phase1, vars)
-#save(s2skip, file = "s2skip.RData")
-#load("s2skip.RData")
+# save/load
+# save(s2p_traces, file = "s2p_traces.RData")
+# save(sxy_traces, file = "sxy_traces.RData")
+# save(s2skip_traces, file = "s2skip.RData")
+# save(sXYskip_traces, file = "sXYskip.RData")
+# load("s2p_traces.RData")
+# load("sxy_traces.RData")
+# load("s2skip_traces.RData")
+# load("sXYskip_traces.RData")
 
-sXYskip     <- compute_pairwise_cov_skip(phase1, vars)
-#save(sXYskip, file = "sXYskip.RData")
-#load("sXYskip.RData")
+# Explore / choose T mask windows in T-space
+#    Shared T-mask settings (minutes)
+#    8, 12, 16, 24, 36, 48 hours
 
-# explore/choose T mask windows (T-space shading only)
-plot_pooled_var_cov_T_mask_tuning(s2p_traces, sxy_traces)
+mask_Ts    <- c(480,  720,  960, 1440, 2160, 2880)
+mask_T_hw  <- c(20,    25,   20,   95,   40,   175)
 
+plot_pooled_var_cov_T_mask_tuning(
+  s2p_traces,
+  sxy_traces,
+  highlight_Ts          = mask_Ts,
+  highlight_T_halfwidth = mask_T_hw
+)
+
+# Explore / choose T mask windows in n_t-space (shaded only, no masking)
 plot_pooled_var_cov_mask_tuning(
   s2p_traces,
   sxy_traces,
-  highlight_Ts          = c(480, 720, 960, 1440, 2160, 2880, 3600, 4320),
-  highlight_T_halfwidth = c(20, 25, 20, 95, 40, 175, 60, 60)
+  highlight_Ts          = mask_Ts,
+  highlight_T_halfwidth = mask_T_hw
 )
 
-
-# plot a single variance or covariance trace
+# Plot a single variance or covariance trace (no masking, no shading)
 plot_single_var_trace(s2p_traces, "co2_ppm")
 plot_single_cov_trace(sxy_traces, "humidity_pct", "soil_temp_F")
 
-# final masked figure (Figure 4)
+# Final masked figure (uses the same mask_Ts/mask_T_hw)
+# Figure 4 (before we add the selected Ts)
 plot_pooled_var_cov(
   s2p_traces,
   sxy_traces,
-  filename = "greenhouse_var_cov.png"
+  highlight_Ts          = mask_Ts,
+  highlight_T_halfwidth = mask_T_hw,
+  filename              = "greenhouse_var_cov.png"
 )
 
-
-
-#explore/choose mask windows
-plot_pooled_var_cov_mask_tuning(s2p_traces, sxy_traces)
-plot_pooled_var_cov_T_mask_tuning(s2p_traces, sxy_traces)
-
-#plot a single variance or covariance trace
-plot_single_var_trace(s2p_traces, "co2_ppm")
-plot_single_cov_trace(sxy_traces, "humidity_pct", "soil_temp_F")
-
-#plot with masking for figure 4
-plot_pooled_var_cov(s2p_traces, sxy_traces,
-                    filename = "greenhouse_var_cov.png")
+# Contrast ESS, Skip, and Naive
+# Figure 3
+p_humid_soil_naive <- plot_single_ess_skip_naive(
+  select = c("humidity_pct","soil_temp_F"),
+  data_raw       = phase1,
+  s2p_traces     = s2p_traces,
+  sxy_traces     = sxy_traces,
+  s2skip_traces  = s2skip_traces,
+  sXYskip_traces = sXYskip_traces,
+  type           = "cov",
+  show_T_boxes   = TRUE,
+  label_position = "top",
+  filename       = "humid_soil_ess_skip_naive.png"
+)
 
