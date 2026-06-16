@@ -68,7 +68,6 @@ p_acf <- ggplot(acfs, aes(lag, corr)) +
              color = gh_cols("grey_dark")) +
   geom_vline(data = vlines_acf,
              aes(xintercept = lag),
-             inherit.aes = FALSE,
              linewidth = 0.3,
              color = gh_cols("grey_mid"),
              linetype = "longdash",
@@ -115,7 +114,6 @@ p_ccf <- ggplot(ccfs, aes(lag, corr)) +
              color = gh_cols("grey_dark")) +
   geom_vline(data = vlines_ccf,
              aes(xintercept = lag),
-             inherit.aes = FALSE,
              linewidth = 0.3,
              color = gh_cols("grey_mid"),
              linetype = "longdash",

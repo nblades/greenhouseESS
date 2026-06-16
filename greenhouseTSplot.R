@@ -84,4 +84,11 @@ plot_greenhouse_facets <- function(data,
 
 
 greenhousetrace <- plot_greenhouse_facets(phase1, col = gh_cols("moody"))
-ggsave("greenhousetrace.pdf", greenhousetrace)
+ggsave(
+  "greenhousetrace.png", 
+  plot = greenhousetrace, 
+  width = 9,      # Width in inches
+  height = 5.5,   # Height in inches
+  units = "in",
+  dpi = 300       # High resolution for print/zooming
+)

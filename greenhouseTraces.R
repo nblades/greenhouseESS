@@ -285,7 +285,6 @@ plot_pooled_var_cov <- function(
       if (!is.null(var_pts) && nrow(var_pts) > 0)
         geom_point(
           data = var_pts,
-          inherit.aes = FALSE,
           aes(x = np_selected, y = estimate),
           shape  = 23,
           size   = 2.8,
@@ -297,7 +296,6 @@ plot_pooled_var_cov <- function(
     geom_hline(
       data = t1_var,
       aes(yintercept = s2p),
-      inherit.aes = FALSE,
       color = "#63B8FF",
       linewidth = 0.4,
       linetype = "dashed"
@@ -337,7 +335,6 @@ plot_pooled_var_cov <- function(
     geom_hline(
       data = t1_cov,
       aes(yintercept = sXYp),
-      inherit.aes = FALSE,
       color = "#63B8FF",
       linewidth = 0.4,
       linetype = "dashed"
@@ -545,7 +542,6 @@ plot_pooled_var_cov_T_mask_tuning <- function(
     geom_hline(
       data = t1_var,
       aes(yintercept = s2p),
-      inherit.aes = FALSE,
       color = "#63B8FF",
       linewidth = 0.4,
       linetype = "dashed"
@@ -576,7 +572,6 @@ plot_pooled_var_cov_T_mask_tuning <- function(
     geom_hline(
       data = t1_cov,
       aes(yintercept = sXYp),
-      inherit.aes = FALSE,
       color = "#63B8FF",
       linewidth = 0.4,
       linetype = "dashed"
@@ -723,7 +718,6 @@ plot_pooled_var_cov_mask_tuning <- function(
     geom_hline(
       data = t1_var,
       aes(yintercept = s2p),
-      inherit.aes = FALSE,
       color = "#63B8FF",
       linewidth = 0.4,
       linetype = "dashed"
@@ -760,7 +754,6 @@ plot_pooled_var_cov_mask_tuning <- function(
     geom_hline(
       data = t1_cov,
       aes(yintercept = sXYp),
-      inherit.aes = FALSE,
       color = "#63B8FF",
       linewidth = 0.4,
       linetype = "dashed"
@@ -1220,20 +1213,20 @@ plot_single_ess_skip_naive <- function(
 
 vars        <- c("co2_ppm","humidity_pct","soil_temp_F")
 
-s2p_traces  <- compute_s2p_traces(phase1, vars)
-sxy_traces  <- compute_pairwise_cov(phase1, vars)
-s2skip_traces     <- compute_s2skip_traces(phase1, vars)
-sXYskip_traces    <- compute_pairwise_cov_skip(phase1, vars)
+#s2p_traces  <- compute_s2p_traces(phase1, vars)
+#sxy_traces  <- compute_pairwise_cov(phase1, vars)
+#s2skip_traces     <- compute_s2skip_traces(phase1, vars)
+#sXYskip_traces    <- compute_pairwise_cov_skip(phase1, vars)
 
 # save/load
 # save(s2p_traces, file = "s2p_traces.RData")
 # save(sxy_traces, file = "sxy_traces.RData")
 # save(s2skip_traces, file = "s2skip.RData")
 # save(sXYskip_traces, file = "sXYskip.RData")
-# load("s2p_traces.RData")
-# load("sxy_traces.RData")
-# load("s2skip_traces.RData")
-# load("sXYskip_traces.RData")
+load("s2p_traces.RData")
+load("sxy_traces.RData")
+load("s2skip.RData")
+load("sXYskip.RData")
 
 # Explore / choose T mask windows in T-space
 #    Shared T-mask settings (minutes)

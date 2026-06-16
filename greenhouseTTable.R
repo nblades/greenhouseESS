@@ -223,7 +223,7 @@ print_table_over_T_xtable <- function(tab,
       command = c(
         paste0(
           "\\toprule\n",
-          "$T$ & $n$ & ESS & \\multicolumn{3}{c}{Skip-Sampling} \\\\\n",
+          "$T$ & $n_t$ & ESS & \\multicolumn{3}{c}{Skip-Sampling} \\\\\n",
           "\\cline{4-6}\n",
           " &  &  & Min & Offset 1 & Max \\\\\n",
           "\\midrule\n"
@@ -249,7 +249,7 @@ print_table_over_T_xtable <- function(tab,
       pos = list(0),
       command = c(
         paste0(
-          "$T$ & $n$ & ESS & \\multicolumn{3}{c}{Skip-Sampling} \\\\\n",
+          "$T$ & $n_t$ & ESS & \\multicolumn{3}{c}{Skip-Sampling} \\\\\n",
           "\\cline{4-6}\n",
           " &  &  & Min & Offset 1 & Max \\\\\n",
           "\\hline\n"
@@ -275,21 +275,21 @@ print_table_over_T_xtable <- function(tab,
 tab_cov_hum_soil <- table_over_T(
   select      = c("humidity_pct", "soil_temp_F"),
   data        = phase1,
-  T_seq       = c(10, 50, 100, 500, 1000),
+  T_seq       = c(1, 10, 50, 100, 200, 500, 1000),
   skip_offset = 1
 )
 
 tab_cov_hum_co2 <- table_over_T(
   select      = c("humidity_pct", "co2_ppm"),
   data        = phase1,
-  T_seq       = c(10, 50, 100, 500, 1000),
+  T_seq       = c(1, 10, 50, 100, 500, 1000),
   skip_offset = 1
 )
 
 tab_cov_co2_soil <- table_over_T(
   select      = c("co2_ppm", "soil_temp_F"),
   data        = phase1,
-  T_seq       = c(10, 50, 100, 500, 1000),
+  T_seq       = c(1, 10, 50, 100, 500, 1000),
   skip_offset = 1
 )
 
@@ -297,7 +297,7 @@ tab_cov_co2_soil <- table_over_T(
 tab_var_co2 <- table_over_T(
   select      = "co2_ppm",
   data        = phase1,
-  T_seq       = c(10, 50, 100, 200, 300),
+  T_seq       = c(1, 10, 50, 100, 200, 300),
   skip_offset = 1
 )
 
@@ -314,24 +314,24 @@ print_table_over_T_xtable(
 
 print_table_over_T_xtable(
   tab_cov_hum_co2,
-  caption    = "Covariance across $T$ for Humidity versus CO$_2$.",
+  caption    = "Estimates of Covariance across $T$ for Humidity versus CO$_2$.",
   label      = "tab:cov_hum_co2",
-  digits_np  = 1,
+  digits_n  = 1,
   digits_est = 2
 )
 
 print_table_over_T_xtable(
   tab_cov_co2_soil,
-  caption    = "Covariance across $T$ for CO$_2$ versus Soil Temperature.",
+  caption    = "Estimates of Covariance across $T$ for CO$_2$ versus Soil Temperature.",
   label      = "tab:cov_co2_soil",
-  digits_np  = 1,
+  digits_n  = 1,
   digits_est = 2
 )
 
 print_table_over_T_xtable(
   tab_var_co2,
-  caption    = "Variance across $T$ for CO$_2$.",
+  caption    = "Estimates of Variance across $T$ for CO$_2$.",
   label      = "tab:var_co2",
-  digits_np  = 1,
+  digits_n  = 1,
   digits_est = 2
 )
