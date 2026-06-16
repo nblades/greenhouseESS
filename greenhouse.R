@@ -23,5 +23,6 @@ source("greenhouseChooseT.R")
 source("greenhouseCovTable.R")
 
 #create table 3
+source("greenhouseTable3.R")
 
 
